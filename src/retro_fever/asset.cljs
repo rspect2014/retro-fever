@@ -65,35 +65,35 @@
            :animation sprite/animation)
          options))
 
-(defn load-dependent-assets []
+(defn load-dependencies []
   "Runs through all assets with dependencies and adds them to the asset store"
   (doseq [{:keys [id dependency-id type options]} @dependent-assets]
     (let [image (get-in @asset-store dependency-id)]
       (swap! asset-store assoc-in id
              (assoc (create-by-type type (concat [image] options)) :loaded true)))))
 
-(defn- collapse-assets
+(defn- collapse
   "Helper function to check wheter all resources have been loaded"
   [data & [key sub-key]]
   (if (map? data)
     (keep (fn [[k v]]
-            (collapse-assets v k key)) data)
+            (collapse v k key)) data)
     (when (= key :loaded)
       (hash-map sub-key data))))
 
 (defn resources-loaded? []
   "Checks wheter all asynchronous loaded resources have completed"
-  (every? true? (vals (apply merge (flatten (collapse-assets @asset-store))))))
+  (every? true? (vals (apply merge (flatten (collapse @asset-store))))))
 
-(defn load-assets
+(defn load
   "Load assets based on a specification map"
-  [asset-spec]
+  [spec]
   (doseq [[k f] {:images load-image
                  :spritesheets load-spritesheet
                  :animations load-animation}]
-    (doall (map #(f %) (k asset-spec)))))
+    (doall (map #(f %) (k spec)))))
 
-(defn- get-asset
+(defn- get-from-store
   "Internal function to extrac assets from the asset store"
   [id]
   (get-in @asset-store id))
@@ -101,14 +101,14 @@
 (defn get-image
   "Extracts a given image from the asset store"
   [id]
-  (get-asset (add-id-prefix :images id)))
+  (get-from-store (add-id-prefix :images id)))
 
 (defn get-spritesheet
   "Extracts a given image from the asset store"
   [id]
-  (get-asset (add-id-prefix :spritesheets id)))
+  (get-from-store (add-id-prefix :spritesheets id)))
 
 (defn get-animation
   "Extracts a given animation from the asset store"
   [id]
-  (get-asset (add-id-prefix :animations id)))
+  (get-from-store (add-id-prefix :animations id)))
