@@ -71,9 +71,24 @@
     :x (if velocity-x (+ x velocity-x) x)
     :y (if velocity-x (+ y velocity-y) y)))
 
+(defn- update-sprite
+  [& [sprite scene :as args]]
+   (if-let [update-fn (:update-fn sprite)]
+     (apply update-fn args)
+     (let [updated-sprite (move sprite)]
+       (if scene
+         (assoc-in scene [(:se-id (meta sprite))] updated-sprite)
+         updated-sprite))))
+
+(defn- update-animated-sprite
+  ([sprite]
+     (update-animated-sprite sprite nil))
+  ([sprite scene]
+     (update-sprite (update-in sprite [:animation] update-frame (:animation sprite)) scene)))
+
 (defprotocol SpriteActions
   (render [this context])
-  (update [this]))
+  (update [this] [this scene]))
 
 (defrecord ImageSprite [image width height x y]
   TypeInfo
@@ -81,28 +96,24 @@
   SpriteActions
   (render [this context] (render-image context (:image image) x y width height 0 0 width height
                                        (* (/ width 2) -1) (* (/ height 2) -1)))
-  (update [this] (if-let [update-fn (:update-fn this)]
-                   (update-fn this)
-                   (move this))))
+  (update [this] (update-sprite this))
+  (update [this scene] (update-sprite this scene)))
 
 (defrecord SpritesheetSprite [spritesheet width height cell x y]
   TypeInfo
   (get-type [this] :spritesheet-sprite)
   SpriteActions
   (render [this context] (render-frame context spritesheet cell x y))
-  (update [this] (if-let [update-fn (:update-fn this)]
-                   (update-fn this)
-                   (move this))))
+  (update [this] (update-sprite this))
+  (update [this scene] (update-sprite this scene)))
 
 (defrecord AnimatedSprite [animation width height x y]
   TypeInfo
   (get-type [this] :animated-sprite)
   SpriteActions
   (render [this context] (render-frame context (:spritesheet animation) (get-cell animation) x y))
-  (update [this] (let [updated-sprite (if-let [update-fn (:update-fn this)]
-                                        (update-fn this)
-                                        (move this))]
-                   (assoc updated-sprite :animation (update-frame (:animation updated-sprite))))))
+  (update [this] (update-animated-sprite this))
+  (update [this scene] (update-animated-sprite this scene)))
 
 (defn ^:export sprite
   "Creates a sprite record based on graphics resource"
