@@ -3,7 +3,8 @@
   (:require [cljs.core.async :refer [<! put! alts! chan timeout]]
             [retro-fever.util :as util]
             [retro-fever.asset :as asset]
-            [retro-fever.stats :as stats]))
+            [retro-fever.stats :as stats]
+            [retro-fever.scene :as scene]))
 
 ; Atom for holding engine specific values
 (def app (atom {:game {:canvas nil :loop nil}}))
@@ -55,8 +56,30 @@ collecting statistics from the game loop"
   "Wrapper function to ensure resources are loaded before they are used"
   (go (loop []
         (if (asset/resources-loaded?)
-          (do (asset/load-dependent-assets)
+          (do (asset/load-dependencies)
               (doseq [f fns]
                 (f)))
           (do (<! (timeout 100))
               (recur))))))
+
+(defmulti game type)
+
+(defmethod game js/Function
+  [update-fn render-fn & options]
+  (let [options-map (reduce (fn [r [k v]] (assoc r k v))
+                      {} (partition 2 options))
+        opts (merge {:ups 60}
+                    options-map)]
+    (game-loop (/ 1000 (:ups opts))
+               update-fn render-fn)))
+
+(defmethod game cljs.core/Atom
+  [game-state & options]
+  (let [scene-view (if (vector? (first options)) (first options) nil)
+        options (if scene-view (rest options) options)]
+    (game
+      (if (empty? scene-view)
+        (fn [] (swap! game-state scene/update))
+        (fn [] (swap! game-state update-in scene-view scene/update)))
+      (fn [context] (scene/render (get-in @game-state scene-view) context))
+      options)))
