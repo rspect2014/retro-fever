@@ -1,8 +1,9 @@
 (ns retro-fever.sprite
+  (:refer-clojure :exclude [update])
   (:require [retro-fever.util :as util]))
 
 (defprotocol TypeInfo
-  (get-type [this] nil))
+  (get-type [this]))
 
 (defrecord Image [image]
   TypeInfo
