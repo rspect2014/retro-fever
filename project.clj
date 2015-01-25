@@ -3,6 +3,8 @@
   :url "http://rf.clojurecup.com"
   :scm {:name "git"
         :url "https://github.com/rspect2014/retro-fever.git"}
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2511"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
