@@ -1,4 +1,4 @@
-(defproject retro-fever "0.2.0-SNAPSHOT"
+(defproject retro-fever "0.2.0"
   :description "A 2D game engine targeting modern browsers and mobile devices"
   :url "http://rf.clojurecup.com"
   :scm {:name "git"
