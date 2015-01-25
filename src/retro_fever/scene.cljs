@@ -19,6 +19,15 @@
   (get-elements [this element-ids])
   (get-elements-at [this node-id]))
 
+(defrecord Node [children]
+  INode
+  (add-child-id [this id]
+    (update-in this [:children] conj id))
+  (get-children-ids [this]
+    (:children this))
+  (remove-child-id [this id]
+    (update-in this [:children] disj id)))
+
 (defrecord Scene []
   IScene
   (add [this element]
@@ -51,15 +60,6 @@
 
 (defn get-id [element]
   (:se-id (meta element)))
-
-(defrecord Node [children]
-  INode
-  (add-child-id [this id]
-    (update-in this [:children] conj id))
-  (get-children-ids [this]
-    (:children this))
-  (remove-child-id [this id]
-    (update-in this [:children] disj id)))
 
 (defn group
   ([]
