@@ -41,9 +41,13 @@
         (assoc id (with-meta element {:se-id id :parent destination-id}))
         (update-in [destination-id] add-child-id id)))
   (remove [this id]
-    (-> this
-        (update-in [(:parent (meta (id this)))] remove-child-id id)
-        (dissoc this id)))
+    (let [element (get this id)
+          scene (if (= (type element) Node)
+                  (reduce #(remove %1 %2) this (get-children-ids element))
+                  this)]
+      (-> scene
+        (update-in [(:parent (meta element))] remove-child-id id)
+        (dissoc id))))
   (move-to [this id destination-id]
     (-> this
         (update-in [(:parent (meta (id this)))] remove-child-id id)
