@@ -9,8 +9,8 @@
 (defn ^:export move [{:keys [x y velocity-x velocity-y] :as sprite}]
   "Moves a sprite based on its velocity on the x and y-axis"
   (assoc sprite
-    :x (if velocity-x (+ x velocity-x) x)
-    :y (if velocity-x (+ y velocity-y) y)))
+         :x (+ x velocity-x)
+         :y (+ y velocity-y)))
 
 (defn- update-sprite
   [& [sprite scene :as args]]
@@ -32,7 +32,21 @@
   (render [this context])
   (update [this] [this scene]))
 
-(defrecord ImageSprite [image width height x y]
+(defrecord StaticImage [image width height x y]
+  TypeInfo
+  (get-type [this] :static-image)
+  SpriteActions
+  (render [this context] (graphic/render-image context (:image image) x y width height))
+  (update [this] this)
+  (update [this scene] scene))
+
+(defn ^:export static-image
+  ([{:keys [width height] :as image} x y]
+   (static-image image width height x y))
+  ([image width height x y]
+   (StaticImage. image width height x y)))
+
+(defrecord ImageSprite [image width height x y velocity-x velocity-y]
   TypeInfo
   (get-type [this] :image-sprite)
   SpriteActions
@@ -41,7 +55,20 @@
   (update [this] (update-sprite this))
   (update [this scene] (update-sprite this scene)))
 
-(defrecord SpritesheetSprite [spritesheet width height cell x y]
+(defn image-sprite
+  "Creates a sprite represented by the given image with the specified values"
+  ([{:keys [image] :as data}]
+   (let [{:keys [width height]} image]
+     (merge (ImageSprite. image width height 0 0 0 0)
+            data)))
+  ([{:keys [width height] :as image} x y]
+   (image-sprite image width image x y 0 0))
+  ([image width height x y]
+   (image-sprite image width height x y 0 0))
+  ([image width height x y velocity-x velocity-y]
+   (ImageSprite. image width height x y velocity-x velocity-y)))
+
+(defrecord SpritesheetSprite [spritesheet cell width height x y velocity-x velocity-y]
   TypeInfo
   (get-type [this] :spritesheet-sprite)
   SpriteActions
@@ -49,7 +76,19 @@
   (update [this] (update-sprite this))
   (update [this scene] (update-sprite this scene)))
 
-(defrecord AnimatedSprite [animation width height x y]
+(defn spritesheet-sprite
+  ([{:keys [spritesheet] :as data}]
+   (let [{:keys [cell-width cell-height]} spritesheet]
+     (merge (SpritesheetSprite. spritesheet 0 cell-width cell-height 0 0 0 0)
+            data)))
+  ([{:keys [cell-width cell-height] :as spritesheet} cell x y]
+   (spritesheet-sprite spritesheet cell cell-width cell-height x y 0 0))
+  ([spritesheet cell width height x y]
+   (spritesheet-sprite spritesheet width height cell x y 0 0))
+  ([spritesheet cell width height x y velocity-x velocity-y]
+   (SpritesheetSprite. spritesheet width height cell x y velocity-x velocity-y)))
+
+(defrecord AnimatedSprite [animation width height x y velocity-x velocity-y]
   TypeInfo
   (get-type [this] :animated-sprite)
   SpriteActions
@@ -58,7 +97,20 @@
   (update [this] (update-animated-sprite this))
   (update [this scene] (update-animated-sprite this scene)))
 
-(defn ^:export sprite
+(defn animated-sprite
+  ([{:keys [animation] :as data}]
+   (let [{:keys [cell-width cell-height]} (:spritesheet animation)]
+     (merge (AnimatedSprite. animation cell-width cell-height 0 0 0 0)
+            data)))
+  ([{:keys [spritesheet] :as animation} x y]
+   (let [{:keys [cell-width cell-height]} spritesheet]
+     (animated-sprite animation cell-width cell-height x y 0 0)))
+  ([animation width height x y]
+   (animated-sprite animation width height x y 0 0))
+  ([animation width height x y velocity-x velocity-y]
+   (AnimatedSprite. animation width height x y velocity-x velocity-y)))
+
+(defn ^:export new
   "Creates a sprite record based on graphics resource"
   [& args]
   (let [arg-1 (first args)
