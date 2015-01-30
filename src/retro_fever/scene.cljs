@@ -46,8 +46,8 @@
                   (reduce #(remove %1 %2) this (get-children-ids element))
                   this)]
       (-> scene
-        (update-in [(:parent (meta element))] remove-child-id id)
-        (dissoc id))))
+          (update-in [(:parent (meta element))] remove-child-id id)
+          (dissoc id))))
   (move-to [this id destination-id]
     (-> this
         (update-in [(:parent (meta (id this)))] remove-child-id id)
@@ -67,19 +67,20 @@
 
 (defn group
   ([]
-    (Node. #{}))
+   (Node. #{}))
   ([update-fn]
-     (assoc (group) :update-fn update-fn)))
+   (assoc (group) :update-fn update-fn)))
 
 (defn layer
   ([order]
-    (layer order nil))
+   (layer order nil))
   ([order update-fn]
-     (assoc (group update-fn) :order order)))
+   (assoc (group update-fn) :order order)))
 
 (defn scene []
   (assoc (Scene.) :se-root (with-meta (group)  {:se-id :se-root})))
 
+(derive sprite/StaticImage ::sprite)
 (derive sprite/ImageSprite ::sprite)
 (derive sprite/SpritesheetSprite ::sprite)
 (derive sprite/AnimatedSprite ::sprite)
@@ -100,10 +101,6 @@
   [element context]
   (sprite/render element context))
 
-(defmethod render sprite/Image
-  [element context]
-  (sprite/render-image context element 0 0))
-
 (defmethod render nil
   [element context]
   nil)
@@ -121,10 +118,10 @@
 (defmethod update Node
   [node scene]
   (reduce #(update %2 %1)
-    (if-let [update-fn (:update-fn node)]
-      (update-fn node scene)
-      scene)
-    (sort-by :order (get-elements scene (get-children-ids node)))))
+          (if-let [update-fn (:update-fn node)]
+            (update-fn node scene)
+            scene)
+          (sort-by :order (get-elements scene (get-children-ids node)))))
 
 (defmethod update ::sprite
   [sprite scene]

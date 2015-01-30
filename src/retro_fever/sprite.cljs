@@ -14,18 +14,19 @@
 
 (defn- update-sprite
   [& [sprite scene :as args]]
-   (if-let [update-fn (:update-fn sprite)]
-     (apply update-fn args)
-     (let [updated-sprite (move sprite)]
-       (if scene
-         (assoc-in scene [(:se-id (meta sprite))] updated-sprite)
-         updated-sprite))))
+  (if-let [update-fn (:update-fn sprite)]
+    (apply update-fn args)
+    (let [updated-sprite (move sprite)]
+      (if scene
+        (assoc-in scene [(:se-id (meta sprite))] updated-sprite)
+        updated-sprite))))
 
 (defn- update-animated-sprite
   ([sprite]
-     (update-animated-sprite sprite nil))
+   (update-animated-sprite sprite nil))
   ([sprite scene]
-     (update-sprite (update-in sprite [:animation] update-frame (:animation sprite)) scene)))
+   (update-sprite (update-in sprite [:animation] graphic/update-frame
+                             (:animation sprite)) scene)))
 
 (defprotocol SpriteActions
   (render [this context])
@@ -35,8 +36,8 @@
   TypeInfo
   (get-type [this] :image-sprite)
   SpriteActions
-  (render [this context] (render-image context (:image image) x y width height 0 0 width height
-                                       (* (/ width 2) -1) (* (/ height 2) -1)))
+  (render [this context] (graphic/render-image context (:image image) x y width height 0 0 width height
+                                               (* (/ width 2) -1) (* (/ height 2) -1)))
   (update [this] (update-sprite this))
   (update [this scene] (update-sprite this scene)))
 
@@ -44,7 +45,7 @@
   TypeInfo
   (get-type [this] :spritesheet-sprite)
   SpriteActions
-  (render [this context] (render-frame context spritesheet cell x y))
+  (render [this context] (graphic/render-frame context spritesheet cell x y))
   (update [this] (update-sprite this))
   (update [this scene] (update-sprite this scene)))
 
@@ -52,7 +53,8 @@
   TypeInfo
   (get-type [this] :animated-sprite)
   SpriteActions
-  (render [this context] (render-frame context (:spritesheet animation) (get-cell animation) x y))
+  (render [this context] (graphic/render-frame context (:spritesheet animation)
+                                               (graphic/get-cell animation) x y))
   (update [this] (update-animated-sprite this))
   (update [this scene] (update-animated-sprite this scene)))
 

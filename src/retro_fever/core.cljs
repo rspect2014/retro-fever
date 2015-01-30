@@ -6,7 +6,7 @@
             [retro-fever.stats :as stats]
             [retro-fever.scene :as scene]))
 
-; Atom for holding engine specific values
+                                        ; Atom for holding engine specific values
 (def app (atom {:game {:canvas nil :loop nil}}))
 
 (defn init-canvas [id width height]
@@ -31,7 +31,7 @@ and set width and height"
 
 (defn game-loop
   "Main function for the engine game loop, calling update, render and
-collecting statistics from the game loop"
+  collecting statistics from the game loop"
   [tick-interval update-fn render-fn]
   (let [quit-chan (chan)
         update (update-loop tick-interval update-fn)]
@@ -67,7 +67,7 @@ collecting statistics from the game loop"
 (defmethod game js/Function
   [update-fn render-fn & options]
   (let [options-map (reduce (fn [r [k v]] (assoc r k v))
-                      {} (partition 2 options))
+                            {} (partition 2 options))
         opts (merge {:ups 60}
                     options-map)]
     (game-loop (/ 1000 (:ups opts))
@@ -78,8 +78,8 @@ collecting statistics from the game loop"
   (let [scene-view (if (vector? (first options)) (first options) nil)
         options (if scene-view (rest options) options)]
     (game
-      (if (empty? scene-view)
-        (fn [] (swap! game-state scene/update))
-        (fn [] (swap! game-state update-in scene-view scene/update)))
-      (fn [context] (scene/render (get-in @game-state scene-view) context))
-      options)))
+     (if (empty? scene-view)
+       (fn [] (swap! game-state scene/update))
+       (fn [] (swap! game-state update-in scene-view scene/update)))
+     (fn [context] (scene/render (get-in @game-state scene-view) context))
+     options)))

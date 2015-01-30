@@ -1,7 +1,7 @@
 (ns retro-fever.input
   (:require [clojure.string :as string]))
 
-; Map holding the current state of the kayboard keys
+                                        ; Map holding the current state of the kayboard keys
 (def kbd-state (atom #{}))
 (def cursor-state (atom {}))
 
@@ -31,9 +31,9 @@
 (defn key-fallback
   [key-code]
   (cond
-   (number-or-character? key-code) (str (char key-code))
-   (contains? special-key-codes key-code) (get special-key-codes key-code)
-   :else (str key-code)))
+    (number-or-character? key-code) (str (char key-code))
+    (contains? special-key-codes key-code) (get special-key-codes key-code)
+    :else (str key-code)))
 
 ;; This is a wrapper because not all browsers have implemented KeyboardEvent.key
 ;; https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent.key
@@ -52,7 +52,7 @@
 
 (defn kbd-state-change
   "Returns a function which takes e keyboard event and swaps the atom
-state using the function f"
+  state using the function f"
   [state f]
   (fn [e]
     (let [k (-> e
