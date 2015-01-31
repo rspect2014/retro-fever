@@ -73,13 +73,22 @@ and set width and height"
     (game-loop (/ 1000 (:ups opts))
                update-fn render-fn)))
 
+(defmethod game cljs.core/PersistentHashMap
+  [{:keys [game-state scene-lens]} & options]
+  (apply (partial game game-state scene-lens) options))
+
+(defmethod game cljs.core/PersistentArrayMap
+  [{:keys [game-state scene-lens]} & options]
+  (apply (partial game game-state scene-lens) options))
+
 (defmethod game cljs.core/Atom
   [game-state & options]
   (let [scene-view (if (vector? (first options)) (first options) nil)
         options (if scene-view (rest options) options)]
-    (game
-     (if (empty? scene-view)
-       (fn [] (swap! game-state scene/update))
-       (fn [] (swap! game-state update-in scene-view scene/update)))
-     (fn [context] (scene/render (get-in @game-state scene-view) context))
-     options)))
+    (apply
+     (partial game
+       (if (empty? scene-view)
+         (fn [] (swap! game-state scene/update))
+         (fn [] (swap! game-state update-in scene-view scene/update)))
+       (fn [context] (scene/render (get-in @game-state scene-view) context)))
+       options)))
