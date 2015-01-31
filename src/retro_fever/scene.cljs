@@ -4,6 +4,25 @@
             [retro-fever.sprite :as sprite]
             [retro-fever.util :as util]))
 
+(def active-scene (atom {:game-state nil :scene-lens nil}))
+
+(defn set-active!
+  ([game-state]
+   (set-active! game-state nil))
+  ([game-state scene-lens]
+   (swap! active-scene assoc :game-state game-state
+          :scene-lens (if (or (nil? scene-lens) (vector? scene-lens))
+                        scene-lens (vector scene-lens)))))
+
+(defn get-active []
+  @active-scene)
+
+(defn update-scene! [fn]
+  (let [{:keys [game-state scene-lens]} @active-scene]
+    (if (vector? scene-lens)
+      (swap! game-state update-in scene-lens fn)
+      (swap! game-state fn))))
+
 (defprotocol INode
   (add-child-id [this id])
   (get-children-ids [this])
@@ -28,14 +47,17 @@
   (remove-child-id [this id]
     (update-in this [:children] disj id)))
 
+(defn create-id []
+  (keyword (gensym "se-")))
+
 (defrecord Scene []
   IScene
   (add [this element]
-    (add this (keyword (gensym "se-")) element))
+    (add this (create-id) element))
   (add [this id element]
     (add-to this :se-root id element))
   (add-to [this destination-id element]
-    (add-to this destination-id (keyword (gensym "se-")) element))
+    (add-to this destination-id (create-id) element))
   (add-to [this destination-id id element]
     (-> this
         (assoc id (with-meta element {:se-id id :parent destination-id}))
@@ -62,6 +84,24 @@
   (get-elements-at [this node-id]
     (get-elements this (get-children-ids (get-element this node-id)))))
 
+(defn add!
+  ([element]
+   (update-scene! #(add % element)))
+  ([id element]
+     (update-scene! #(add % id element))))
+
+(defn add-to!
+  ([destination-id element]
+   (update-scene! #(add-to % destination-id element)))
+  ([destination-id id element]
+   (update-scene! #(add-to % destination-id id element))))
+
+(defn remove! [id]
+  (update-scene! #(remove % id)))
+
+(defn move-to! [id destination-id]
+  (update-scene! #(move-to % id destination-id)))
+
 (defn get-id [element]
   (:se-id (meta element)))
 
@@ -77,7 +117,7 @@
   ([order update-fn]
    (assoc (group update-fn) :order order)))
 
-(defn scene []
+(defn new []
   (assoc (Scene.) :se-root (with-meta (group)  {:se-id :se-root})))
 
 (derive sprite/StaticImage ::sprite)
