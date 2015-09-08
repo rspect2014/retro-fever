@@ -50,6 +50,17 @@
   [k]
   (if (= k " ") "Space" k))
 
+;; Different browsers use different key names such as Left Arrow Key being
+;; Left (Chrome) or ArrowLeft (Firefox)
+(defn standardize-key
+  [k]
+  (case k
+    "ArrowLeft" "Left"
+    "ArrowRight" "Right"
+    "ArrowUp" "Up"
+    "ArrowDown" "Down"
+    k))
+
 (defn kbd-state-change
   "Returns a function which takes e keyboard event and swaps the atom
   state using the function f"
@@ -58,9 +69,12 @@
     (let [k (-> e
                 get-key
                 space-as-space
+                standardize-key
                 string/lower-case
                 keyword)]
-      (apply swap! [state f k]))))
+      (apply swap! [state f k])
+      (.preventDefault e)
+      (.stopPropagation e))))
 
 (defn key-pressed?
   [key-code]
