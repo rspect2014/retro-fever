@@ -17,3 +17,10 @@ engine here: [Getting started guide](http://retro-fever.com/getting_started.html
 
 It is possible to build the demos in the `demo` directory by follow the instructions
 in the `README.md` files within each of the demo sub directories you want to test out.
+
+## License
+
+Copyright © 2017 RetroSpect
+
+Distributed under the Eclipse Public License either version 1.0 or any later
+version.
