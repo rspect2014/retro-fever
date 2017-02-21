@@ -6,18 +6,22 @@
             [retro-fever.stats :as stats]
             [retro-fever.scene :as scene]))
 
-                                        ; Atom for holding engine specific values
+; Atom for holding engine specific values
 (def app (atom {:game {:canvas nil :loop nil}}))
 
 (defn init-canvas [id width height]
-  "Initialize the game canvas to the canvas with given the id
+  "Initialize the game canvas to the canvas with the given id
 and set width and height"
   (let [canvas (.getElementById js/document (name id))]
     (set! (.-width canvas) width)
     (set! (.-height canvas) height)
-    (swap! app assoc-in [:game :canvas] {:context (.getContext canvas "2d")
+    (swap! app assoc-in [:game :canvas] {:element canvas
+                                         :context (.getContext canvas "2d")
                                          :width width
                                          :height height})))
+
+(defn get-canvas []
+  (get-in @app [:game :canvas :element]))
 
 (defn- update-loop [tick-interval update-fn]
   "Internal function to create the update loop logic"
