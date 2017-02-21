@@ -1,6 +1,7 @@
 (ns retro-fever.asset
   (:require [clojure.walk :as walk]
             [retro-fever.graphic :as graphic]
+            [retro-fever.resource.audio :as audio]
             [retro-fever.util :as util]))
 
 ; Map to hold all the loaded game assets
@@ -63,6 +64,23 @@
            :dependency-id (util/add-id-prefix :spritesheets (if (string? src) id src))
            :options [cycle (or interval 20) (or repeat true) 0 0 (or running false)]})))
 
+(defn- audio-loaded [id]
+  "Callback function for loaded audio"
+  (let [audio (get-in @asset-store id)]
+    (swap! asset-store update-in id merge audio {:loaded true})))
+
+(defn ^:export load-audio
+  "Load audio from resource"
+  ([id src]
+   (load-audio {:id id :src src :loop false}))
+  ([id src loop]
+   (load-audio {:id id :src src :loop loop}))
+  ([{:keys [id src loop]}]
+   (let [id (util/add-id-prefix :audios id)
+         audio (audio/audio src)]
+     (swap! asset-store assoc-in id (assoc (audio/Audio. audio loop) :loaded false))
+     (.addEventListener audio "canplaythrough" #(audio-loaded id)))))
+
 (defn- create-by-type [type options]
   "Helper function to call the right constructor for dependent assets"
   (apply (condp = type
@@ -94,11 +112,12 @@
   [spec]
   (doseq [[k f] {:images load-image
                  :spritesheets load-spritesheet
-                 :animations load-animation}]
+                 :animations load-animation
+                 :audios load-audio}]
     (doall (map #(f %) (k spec)))))
 
 (defn- get-from-store
-  "Internal function to extrac assets from the asset store"
+  "Internal function to extract assets from the asset store"
   [id]
   (get-in @asset-store id))
 
@@ -116,3 +135,8 @@
   "Extracts a given animation from the asset store"
   [id]
   (get-from-store (util/add-id-prefix :animations id)))
+
+(defn get-audio
+  "Extracts a given audio from the asset store"
+  [id]
+  (get-from-store (util/add-id-prefix :audios id)))
