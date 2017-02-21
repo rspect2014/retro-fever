@@ -1,6 +1,5 @@
 (ns retro-fever.graphic
-  (:refer-clojure :exclude [update])
-  (:require [retro-fever.util :as util]))
+  (:refer-clojure :exclude [update]))
 
 (defprotocol TypeInfo
   (get-type [this]))
@@ -52,7 +51,7 @@
   (reset [this] (assoc this :counter 0 :current-idx 0)))
 
 (defn animation
-  "Wrapper function for dynamic creatin from other namespaces"
+  "Wrapper function for dynamic creating from other namespaces"
   [spritesheet cycle interval repeat current-idx counter running]
   (Animation. spritesheet cycle interval repeat current-idx counter running))
 
